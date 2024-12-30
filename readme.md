@@ -4,60 +4,53 @@ This package is used to control the Unitree A1 robot with a pre-trained AI model
 
 # Installation
 
-To run the robot from the terminal teleop-twist-keyboard package is required.
+## 1. Clone the repository:
 
 ```bash
-sudo apt install ros-noetic-teleop-twist-keyboard
+git clone https://github.com/Jellal-17/unitree_model_control.git
 ```
-
-Model depends on libtorch and it needs to be installed too.
-```bash
-cd ~/Downloads
-wget https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.0.1%2Bcpu.zip
-unzip libtorch-cxx11-abi-shared-with-deps-2.0.1+cpu.zip -d ./
-```
-Unzip the folder and inside bashrc add this command with the path of your libtorch installation. `export Torch_DIR=/path/to/your/torchlib`
-
-Install unitree ros package. 
+## 2. Build the Docker image:
 
 ```bash
-git clone https://github.com/mertgungor/unitree_ros.git ~/unitree_ros/src --recurse-submodules
+docker build -t model_control .
 ```
 
-After cloning cd into the unitree_ros and install model control package.
-
-```bash
-cd ~/unitree_ros/src
-git clone https://github.com/mertgungor/unitree_model_control.git
+## 3. Run the docker container:
 ```
-
-Build the workspace
-```bash
-cd ~/unitree_ros
-catkin_make
+docker run -it \
+    --env="DISPLAY" \
+    --env="QT_X11_NO_MITSHM=1" \
+    --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+    --privileged \
+    --gpus all \
+    model_control 
 ```
-
-
+- Change the name of the container (```model_control```) as you wish.
+- Modify the command if you do not want to use all GPUs by replacing ```--gpus all``` with a specific GPU index (e.g., ```--gpus '"device=0"'```).
 # Usage
 
-First start the Gazebo simulation.
+## 1. Start the Gazebo Simulation
+Run the following commands inside the Docker container:
 
 ```bash
-cd ~/unitree_ros
+./start_docker.sh
 source devel/setup.bash
 roslaunch unitree_gazebo normal.launch rname:=a1
 ```
 
-In a new therminal start the AI model.
+## 2. Start the AI Model
+Open a new terminal and access the Docker container:
 
 ```bash
-cd ~/unitree_ros
+./acess_docker.sh
 source devel/setup.bash
 rosrun unitree_model_control model_run
 ```
 
-Finally, in a new terminal run `teleop_keyboard_twist` node to command the robot to walk. 
+## 3. Control the Robot
+Open another terminal and access the Docker container to start the ```teleop_keyboard_twist node```, which allows you to command the robot to walk:
 
 ```bash
+./acess_docker.sh
 rosrun teleop_twist_keyboard teleop_twist_keyboard.py
 ```
